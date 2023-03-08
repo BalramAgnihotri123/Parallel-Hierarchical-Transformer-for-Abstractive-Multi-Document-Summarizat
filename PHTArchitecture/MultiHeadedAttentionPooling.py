@@ -16,9 +16,9 @@ class MultiHeadedAttentionPooling(nn.Module):
         self.W3 = nn.Linear(self.embed_size, self.embed_size, bias = False)
 
         self.ffc = nn.Sequential(
-            nn.Linear(embed_size,embed_size*forward_expansion),
+            nn.Linear(embed_size,forward_expansion),
             nn.ReLU(),
-            nn.Linear(embed_size*forward_expansion,embed_size)
+            nn.Linear(forward_expansion,embed_size)
         )
         self.norm = nn.LayerNorm(embed_size)
 

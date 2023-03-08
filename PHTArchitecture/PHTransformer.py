@@ -15,7 +15,7 @@ class PHTransformer(nn.Module):
                  word_heads=4,
                  para_heads = 10,
                  num_layers=6,
-                 forward_expansion=4,
+                 forward_expansion=256,
                  max_length=2000,
                  embed_size=100,
                  ):
@@ -50,9 +50,13 @@ class PHTransformer(nn.Module):
 
     def make_tgt_mask(self, tgt):
         N, tgt_len = tgt.shape
-        tgt_mask = torch.tril(torch.ones(tgt_len, tgt_len)).expand(
-            N, 1, tgt_len, tgt_len
-            )
+
+        tgt_mask = torch.ones(N, tgt_len)
+        decoder_attention_mask = tgt_mask.unsqueeze(1) 
+        decoder_attention_mask = decoder_attention_mask.unsqueeze(3) 
+
+        tgt_mask = torch.tril(decoder_attention_mask)
+        
         
         return tgt_mask.to(self.device)
 
@@ -65,11 +69,11 @@ class PHTransformer(nn.Module):
         if tgt_mask is None:
             tgt_mask = self.make_tgt_mask(tgt)
 
-        word_embeddings, paragraph_embeddings = self.encoder(src)
-        out = self.decoder(tgt, word_embeddings, paragraph_embeddings)
+        word_embeddings, paragraph_embeddings = self.encoder(src, src_mask.to(self.device))
+        out = self.decoder(tgt, word_embeddings, paragraph_embeddings, src_mask.to(self.device), tgt_mask.to(self.device))
 
         return out
-
+    
 
 if __name__ == '__main__':
     b = torch.randint(low=0, high=400, size=(32, 512), dtype=torch.long)
